@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Harborline Care</title>
+  <style>
+    :root {
+      --bg: #11162c;
+      --bg-2: #171d3a;
+      --bg-3: #1c2344;
+      --ink: #f4f6ff;
+      --ink-2: #aab2cf;
+      --ink-3: #7c84a3;
+      --gold: #e0a83c;
+      --gold-2: #c98500;
+      --line: rgba(255,255,255,0.12);
+      --red: #e66767;
+      --green: #3dba6e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1.5rem 1.5rem 0;
+      max-width: 52rem;
+      margin: 0 auto;
+    }
+    .kicker {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin: 0 0 0.4rem;
+    }
+    h1 { font-size: 1.55rem; margin: 0 0 0.35rem; }
+    .lede { color: var(--ink-2); margin: 0 0 1.25rem; }
+    main { max-width: 52rem; margin: 0 auto; padding: 0 1.5rem 3rem; }
+    .panel {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    label { display: block; font-size: 0.78rem; color: var(--ink-3); margin-bottom: 0.35rem; }
+    select, textarea, button {
+      font: inherit;
+      color: var(--ink);
+    }
+    select, textarea {
+      width: 100%;
+      background: var(--bg-3);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+    }
+    textarea { min-height: 5.5rem; resize: vertical; }
+    .row { display: flex; gap: 0.75rem; align-items: end; margin-bottom: 0.85rem; }
+    .row > div { flex: 1; }
+    button {
+      background: var(--gold);
+      color: #1a1406;
+      border: 0;
+      border-radius: 8px;
+      padding: 0.7rem 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.85rem; }
+    .chip {
+      background: transparent;
+      color: var(--ink-2);
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .chip:hover { border-color: var(--gold-2); color: var(--ink); }
+    .meta {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      margin: 1.1rem 0 0.6rem;
+      font-size: 0.78rem; color: var(--ink-3);
+    }
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: 0.15rem 0.55rem;
+    }
+    .answer {
+      white-space: pre-wrap;
+      margin: 0;
+      font-size: 1.02rem;
+    }
+    .error { color: var(--red); }
+    h2 { font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin: 1.4rem 0 0.5rem; }
+    .doc {
+      border-top: 1px solid var(--line);
+      padding: 0.7rem 0;
+    }
+    .doc strong { display: block; }
+    .doc span { color: var(--ink-3); font-size: 0.78rem; }
+    .doc p { margin: 0.3rem 0 0; color: var(--ink-2); font-size: 0.9rem; }
+    .steps { font-size: 0.82rem; color: var(--ink-2); }
+    .steps code { font-size: 0.78rem; color: var(--gold); }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="kicker" id="kicker">Harborline Care</p>
+    <h1 id="title">Ask the knowledge base</h1>
+    <p class="lede" id="lede">Loading the active spec…</p>
+  </header>
+  <main>
+    <form class="panel" id="ask-form">
+      <div class="row">
+        <div>
+          <label for="config">Config</label>
+          <select id="config" name="config"></select>
+        </div>
+      </div>
+      <label for="question">Question</label>
+      <textarea id="question" name="question" placeholder="Ask a question from the Harborline docs"></textarea>
+      <div class="chips" id="chips"></div>
+      <div class="row" style="margin: 0.9rem 0 0;">
+        <button type="submit" id="go">Ask</button>
+      </div>
+    </form>
+
+    <div id="result" hidden>
+      <div class="meta" id="meta"></div>
+      <div class="panel"><p class="answer" id="answer"></p></div>
+      <h2>Retrieved documents</h2>
+      <div id="docs"></div>
+      <h2>Pipeline</h2>
+      <p class="steps" id="steps"></p>
+    </div>
+  </main>
+  <script>
+    function renderSamples(samples) {
+      const chips = document.getElementById("chips");
+      chips.innerHTML = "";
+      samples.forEach((q) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip";
+        b.textContent = q;
+        b.addEventListener("click", () => {
+          document.getElementById("question").value = q;
+        });
+        chips.appendChild(b);
+      });
+    }
+
+    async function loadConfigs() {
+      const res = await fetch("/api/configs");
+      const configs = await res.json();
+      const select = document.getElementById("config");
+      select.innerHTML = "";
+      configs.forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c.name;
+        opt.textContent = `${c.name} — k=${c.k}, critic ${c.critic_enabled ? c.critic_mode : "off"}`;
+        select.appendChild(opt);
+      });
+    }
+
+    document.getElementById("ask-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const question = document.getElementById("question").value.trim();
+      const config = document.getElementById("config").value;
+      const go = document.getElementById("go");
+      const result = document.getElementById("result");
+      const answer = document.getElementById("answer");
+      if (!question) return;
+      go.disabled = true;
+      go.textContent = "Asking…";
+      result.hidden = false;
+      answer.textContent = "Retrieving and generating an answer…";
+      answer.classList.remove("error");
+      document.getElementById("docs").innerHTML = "";
+      document.getElementById("steps").textContent = "";
+      document.getElementById("meta").innerHTML = "";
+      try {
+        const res = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, config }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Request failed");
+        answer.textContent = data.answer;
+        const c = data.config;
+        const tot = data.totals || {};
+        const spec = data.spec || {};
+        document.getElementById("meta").innerHTML = [
+          spec.version ? `spec ${spec.id} ${spec.version}` : null,
+          `config ${c.name}`,
+          `k=${c.k}`,
+          `critic ${c.critic_ran ? "ran" : "skipped"}`,
+          `${tot.tokens || 0} tokens`,
+          `${tot.latency_ms || 0} ms`,
+          `est. $${Number(tot.cost_usd || 0).toFixed(6)}`,
+        ].filter(Boolean).map((t) => `<span class="pill">${t}</span>`).join("");
+        document.getElementById("docs").innerHTML = data.retrieved.map((d) => `
+          <div class="doc">
+            <strong>${d.rank}. ${d.title}</strong>
+            <span>${d.id} · score ${d.score}${d.status !== "current" ? " · " + d.status : ""}</span>
+            <p>${d.snippet}</p>
+          </div>
+        `).join("");
+        document.getElementById("steps").innerHTML = data.steps.map((s) => {
+          const bits = [s.name];
+          if (s.k) bits.push("k=" + s.k);
+          if (s.model) bits.push(s.model);
+          if (s.input_tokens || s.output_tokens) {
+            bits.push(s.input_tokens + " in / " + s.output_tokens + " out");
+          }
+          if (s.cost_usd) bits.push("$" + Number(s.cost_usd).toFixed(6));
+          bits.push(s.latency_ms + " ms");
+          return `<code>${bits.join(" · ")}</code>`;
+        }).join(" → ");
+      } catch (err) {
+        answer.classList.add("error");
+        answer.textContent = err.message;
+      } finally {
+        go.disabled = false;
+        go.textContent = "Ask";
+      }
+    });
+
+    async function loadSpec() {
+      const res = await fetch("/api/spec");
+      const spec = await res.json();
+      if (!res.ok) throw new Error("Could not load spec");
+      document.getElementById("kicker").textContent = spec.kicker;
+      document.getElementById("title").textContent = spec.title;
+      document.getElementById("lede").textContent = spec.lede;
+      document.title = spec.kicker || spec.title;
+      if (spec.samples && spec.samples[0]) {
+        document.getElementById("question").placeholder = "e.g. " + spec.samples[0];
+      }
+      renderSamples(spec.samples || []);
+    }
+
+    Promise.all([loadSpec(), loadConfigs()]).catch((err) => {
+      document.getElementById("result").hidden = false;
+      const answer = document.getElementById("answer");
+      answer.classList.add("error");
+      answer.textContent = "Could not load spec or configs: " + err.message;
+    });
+  </script>
+</body>
+</html>

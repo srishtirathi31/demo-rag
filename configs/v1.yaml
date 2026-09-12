@@ -1,0 +1,9 @@
+name: v1
+description: Baseline — retrieve 5 docs, answer once. No reviewer.
+
+retriever:
+  k: 5
+
+critic:
+  enabled: false
+  mode: always

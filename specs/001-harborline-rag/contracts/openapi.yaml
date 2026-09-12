@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: Harborline RAG
+  version: 0.1.0
+  description: Spec-driven retrieve-then-answer API. Behavior comes from contracts/pipeline.yaml.
+paths:
+  /:
+    get:
+      summary: Serve the Harborline Care UI
+      responses:
+        "200":
+          description: HTML page
+  /api/health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+  /api/spec:
+    get:
+      summary: Active pipeline spec (copy, samples, identity)
+      responses:
+        "200":
+          description: Spec metadata used by the UI
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpecInfo"
+  /api/configs:
+    get:
+      summary: List agent profiles
+      responses:
+        "200":
+          description: Profiles from configs/*.yaml
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConfigInfo"
+  /api/ask:
+    post:
+      summary: Retrieve, reason, and optionally review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AskRequest"
+      responses:
+        "200":
+          description: Grounded answer plus trace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AskResult"
+        "400":
+          description: Empty question
+        "404":
+          description: Unknown config
+        "500":
+          description: Gateway or runtime failure
+components:
+  schemas:
+    AskRequest:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+        config:
+          type: string
+          default: v1
+    SpecInfo:
+      type: object
+      required: [id, version, title, kicker, lede, samples]
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        title:
+          type: string
+        kicker:
+          type: string
+        lede:
+          type: string
+        samples:
+          type: array
+          items:
+            type: string
+    ConfigInfo:
+      type: object
+      required: [name, description, k, critic_enabled, critic_mode]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        k:
+          type: integer
+        critic_enabled:
+          type: boolean
+        critic_mode:
+          type: string
+    AskResult:
+      type: object
+      required: [question, answer, config, spec, totals, retrieved, steps]
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+        config:
+          type: object
+        spec:
+          type: object
+        totals:
+          type: object
+        retrieved:
+          type: array
+          items:
+            type: object
+        steps:
+          type: array
+          items:
+            type: object

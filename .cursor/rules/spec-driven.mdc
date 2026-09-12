@@ -1,0 +1,14 @@
+---
+description: Harborline RAG is spec-driven — edit specs before code
+alwaysApply: true
+---
+
+# Spec-driven Harborline RAG
+
+Product behavior lives in `specs/001-harborline-rag/`. The constitution is `.specify/memory/constitution.md`.
+
+- Change prompts, sample questions, UI copy, unsure markers, or the outdated-doc penalty in `specs/001-harborline-rag/contracts/pipeline.yaml` first.
+- Change retrieval depth or critic policy in `configs/*.yaml` only. Do not fork prompts per profile.
+- Then update Python/HTML so it still loads those files. Do not hardcode product copy or prompts in `src/pipeline.py` or `static/index.html`.
+- Keep answers grounded in `corpus/`. Do not invent Harborline facts.
+- Add or update a contract test in `tests/` when the spec or API shape changes.

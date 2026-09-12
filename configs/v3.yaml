@@ -1,0 +1,9 @@
+name: v3
+description: Lean upgrade — retrieve 7 docs; reviewer only if the draft is unsure.
+
+retriever:
+  k: 7
+
+critic:
+  enabled: true
+  mode: if_unsure

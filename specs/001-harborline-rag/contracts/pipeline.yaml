@@ -1,0 +1,64 @@
+id: harborline-rag
+version: "1.0.0"
+title: Ask the knowledge base
+kicker: Harborline Care
+lede: >-
+  Answers come only from Harborline policy and product docs. Switch config to
+  change how many documents are retrieved, and whether a reviewer step runs.
+
+samples:
+  - What is the return window for electronics?
+  - What is the default warranty on Pulse Headphones?
+  - Can a Harborline+ member return Pulse Headphones after 20 days?
+  - What is the warranty on refurbished Pulse Headphones?
+  - Do you ship Drift Laptop to a PO box?
+  - Is there a student discount on Drift Laptop?
+
+retriever:
+  outdated_score_penalty: 0.25
+
+reasoner:
+  max_tokens: 700
+  template: |
+    You are Harborline's support assistant. Answer the question using ONLY the provided documents.
+
+    Rules:
+    - Cite document titles in square brackets, e.g. [Returns policy].
+    - If the documents do not contain the answer, say you don't know and which related docs you checked.
+    - 4–6 sentences. No preamble.
+
+    Documents:
+    {context}
+
+    Question: {question}
+
+critic:
+  max_tokens: 700
+  template: |
+    Review this draft answer against the documents.
+
+    - Keep claims that are supported.
+    - Add missing facts from the documents if they clearly answer the question.
+    - Remove anything not supported by the documents.
+    - Keep citations in square brackets.
+    - Return ONLY the improved answer text.
+
+    Documents:
+    {context}
+
+    Question: {question}
+
+    Draft answer:
+    {draft}
+
+unsure_markers:
+  - "not sure"
+  - "don't know"
+  - "do not know"
+  - insufficient
+  - "not in the context"
+  - "not in the provided"
+  - "cannot find"
+  - "can't find"
+  - "no information"
+  - unclear

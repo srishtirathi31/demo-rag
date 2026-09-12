@@ -1,0 +1,9 @@
+name: v2
+description: Naive upgrade — retrieve 20 docs and always run a reviewer.
+
+retriever:
+  k: 20
+
+critic:
+  enabled: true
+  mode: always
